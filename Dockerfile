@@ -73,13 +73,26 @@ RUN set -eux; \
     ln -sf /usr/bin/batcat /usr/local/bin/bat; \
     mkdir -p /etc/xdg/worktrunk; \
     printf '%s\n' 'worktree-path = "{{ repo_path }}/../{{ branch | sanitize }}"' > /etc/xdg/worktrunk/config.toml; \
+    existing_user="$(getent passwd "${LETTA_UID}" | cut -d: -f1 || true)"; \
+    if [ -n "$existing_user" ] && [ "$existing_user" != "letta" ]; then \
+      userdel "$existing_user"; \
+    fi; \
+    for group_user in $(awk -F: -v gid="${LETTA_GID}" '$4 == gid { print $1 }' /etc/passwd); do \
+      if [ "$group_user" != "letta" ]; then \
+        userdel "$group_user"; \
+      fi; \
+    done; \
+    existing_group="$(getent group "${LETTA_GID}" | cut -d: -f1 || true)"; \
+    if [ -n "$existing_group" ] && [ "$existing_group" != "letta" ]; then \
+      groupdel "$existing_group"; \
+    fi; \
     groupadd --gid "${LETTA_GID}" letta; \
     useradd --uid "${LETTA_UID}" --gid "${LETTA_GID}" --create-home --home-dir /home/letta --shell /bin/bash letta; \
     version="${LETTA_CODE_VERSION:-$(cat /tmp/letta-code-version.txt)}"; \
     bun install -g "@letta-ai/letta-code@${version}"; \
     mkdir -p /home/letta/Code /home/letta/.config /home/letta/.letta; \
-    chown -R letta:letta /home/letta; \
-    chmod -R a+rX "${COREPACK_HOME}"; \
+    chown -R letta:letta /home/letta "${COREPACK_HOME}"; \
+    chmod -R u+rwX,go+rX "${COREPACK_HOME}"; \
     rm -rf /var/lib/apt/lists/*
 
 ENV ENV_NAME="cloud"

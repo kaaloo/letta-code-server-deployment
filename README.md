@@ -94,12 +94,12 @@ This repo commits a `letta-code-version.txt` bump whenever a new `@letta-ai/lett
 
 The container starts as root only long enough to prepare the mounted volume, then drops privileges and runs `letta server` as the `letta` user with `HOME=/home/letta`. Store repositories under `/home/letta/Code`.
 
-If migrating from the upstream `/root` volume layout, copy the existing auth state before changing the Railway volume mount path. The old volume root is `/root`; after the Railway mount path changes, that same volume root becomes `/home`. Creating `/root/letta/...` before the switch therefore creates `/home/letta/...` after the switch:
+Only if migrating from the upstream `/root` volume layout, copy the existing auth state before changing the Railway volume mount path. New deployments do not need `/root`. The old volume root is `/root`; after the Railway mount path changes, that same volume root becomes `/home`. Creating `/root/letta/...` before the switch therefore creates `/home/letta/...` after the switch:
 
 ```bash
 mkdir -p /root/letta
-cp -a /root/.letta /root/letta/.letta 2>/dev/null || true
-cp -a /root/.config /root/letta/.config 2>/dev/null || true
+cp -a /root/.letta /root/letta/ 2>/dev/null || true
+cp -a /root/.config /root/letta/ 2>/dev/null || true
 ```
 
 After the same volume is mounted at `/home`, these paths become `/home/letta/.letta` and `/home/letta/.config`.
