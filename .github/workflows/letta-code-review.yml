@@ -24,6 +24,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           agent_id: ${{ vars.LETTA_AGENT_ID }}
           model: ${{ vars.LETTA_MODEL }}
+          letta_args: --agent ${{ vars.LETTA_AGENT_ID }}
           prompt: |
             Review this pull request for correctness bugs, security issues,
             behavioral regressions, and missing tests. Focus only on actionable

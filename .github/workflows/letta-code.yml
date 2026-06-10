@@ -23,3 +23,5 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           agent_id: ${{ vars.LETTA_AGENT_ID }}
           model: ${{ vars.LETTA_MODEL }}
+          letta_args: --agent ${{ vars.LETTA_AGENT_ID }}
+          track_progress: true
