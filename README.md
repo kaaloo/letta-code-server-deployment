@@ -6,6 +6,18 @@ Deploy a [Letta Code](https://docs.letta.com/letta-code) remote environment to a
 
 This fork is tuned for remote coding agents: the image installs common CLI tools, prepares `/home/letta/Code`, and runs `letta server` as a non-root `letta` user.
 
+## Included coding tools
+
+The Docker image includes baseline tools for TypeScript, Python, GitHub, and database-oriented agent work:
+
+- Node.js 24, Bun, Corepack, pnpm, and Yarn
+- [proto](https://moonrepo.dev/docs/proto/install) under `/opt/proto` for repository-pinned toolchains via `.prototools`
+- Git, GitHub CLI (`gh`), Worktrunk (`wt`), ripgrep, fd, bat, jq, yq, shellcheck, pre-commit, uv, and common build tools
+- Supabase CLI installed from the official Linux release package
+- Docker Engine, Docker CLI, Buildx, and Compose plugin from Docker's official Debian repository
+
+Supabase local development uses Docker containers. The image includes Docker tooling for runtimes that expose a usable Docker daemon or Docker socket, but Railway does not currently provide the container privileges required to run a nested Docker daemon. On Railway, `supabase start` and other local Supabase container workflows are expected **not** to work. Agents can still edit code, run non-Docker checks, build TypeScript projects, and use remote Supabase projects from Railway.
+
 ## How it works
 
 `letta server` opens an outbound WebSocket to Letta Cloud. No inbound ports, no reverse proxy, no domain name needed.
@@ -157,6 +169,8 @@ Enabled channel adapters are restored automatically after container restarts. Yo
 | `/home/letta/.letta` | Letta auth, state, and remote environment data. |
 | `/home/letta/.config` | CLI configuration such as Worktrunk config. |
 | `/home/letta/Code` | Durable repository and worktree root for coding agents. |
+| `/opt/corepack` | Writable Corepack cache for package-manager versions requested by repositories. |
+| `/opt/proto` | Writable proto installation and tool cache, outside `/home` so volume mounts do not hide it. |
 
 The image includes a system Worktrunk config for the bare-repo workspace pattern:
 

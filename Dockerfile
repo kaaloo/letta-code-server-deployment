@@ -3,10 +3,16 @@ FROM oven/bun:slim
 # Install Letta Code and the baseline tools needed by remote coding agents.
 ENV BUN_INSTALL_GLOBAL_DIR=/opt/letta-code
 ENV COREPACK_HOME=/opt/corepack
+ENV PROTO_HOME=/opt/proto
+ENV PROTO_LOG=error
+ENV PATH=/opt/proto/shims:/opt/proto/bin:$PATH
+ARG TARGETARCH
 ARG LETTA_UID=10001
 ARG LETTA_GID=10001
 ARG LETTA_CODE_VERSION=""
 ARG PNPM_VERSION="11.5.2"
+ARG PROTO_VERSION="0.55.2"
+ARG SUPABASE_CLI_VERSION="2.105.0"
 ARG YARN_VERSION="4.16.0"
 ARG WORKTRUNK_VERSION="0.57.0"
 
@@ -21,14 +27,30 @@ RUN set -eux; \
     mkdir -p /etc/apt/keyrings; \
     curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
       | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg; \
+    curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc; \
+    chmod a+r /etc/apt/keyrings/docker.asc; \
     printf '%s\n' 'deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_24.x nodistro main' \
       > /etc/apt/sources.list.d/nodesource.list; \
+    docker_codename="$(. /etc/os-release && printf '%s' "$VERSION_CODENAME")"; \
+    printf '%s\n' \
+      'Types: deb' \
+      'URIs: https://download.docker.com/linux/debian' \
+      "Suites: ${docker_codename}" \
+      'Components: stable' \
+      "Architectures: $(dpkg --print-architecture)" \
+      'Signed-By: /etc/apt/keyrings/docker.asc' \
+      > /etc/apt/sources.list.d/docker.sources; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
       bash \
       bat \
       build-essential \
+      containerd.io \
       direnv \
+      docker-buildx-plugin \
+      docker-ce \
+      docker-ce-cli \
+      docker-compose-plugin \
       fd-find \
       file \
       gh \
@@ -61,11 +83,31 @@ RUN set -eux; \
         echo "Skipping unavailable Debian package: $pkg"; \
       fi; \
     done; \
+    supabase_arch="${TARGETARCH:-amd64}"; \
+    case "$supabase_arch" in \
+      amd64|arm64) ;; \
+      *) echo "Unsupported Supabase CLI architecture: $supabase_arch" >&2; exit 1 ;; \
+    esac; \
+    curl -fsSL -o /tmp/supabase.deb \
+      "https://github.com/supabase/cli/releases/download/v${SUPABASE_CLI_VERSION}/supabase_${SUPABASE_CLI_VERSION}_linux_${supabase_arch}.deb"; \
+    dpkg -i /tmp/supabase.deb; \
+    rm -f /tmp/supabase.deb; \
     mkdir -p "${COREPACK_HOME}"; \
     corepack enable; \
     corepack prepare "pnpm@${PNPM_VERSION}" --activate; \
     corepack prepare "yarn@${YARN_VERSION}" --activate; \
     corepack install -g "pnpm@${PNPM_VERSION}" "yarn@${YARN_VERSION}"; \
+    curl -fsSL https://moonrepo.dev/install/proto.sh \
+      | env PROTO_HOME="${PROTO_HOME}" bash -s -- "${PROTO_VERSION}" --yes --no-profile; \
+    mkdir -p "${PROTO_HOME}/shims"; \
+    printf '%s\n' \
+      'export PROTO_HOME="${PROTO_HOME:-/opt/proto}"' \
+      'export PROTO_LOG="${PROTO_LOG:-error}"' \
+      'case ":$PATH:" in' \
+      '  *":$PROTO_HOME/shims:"*) ;;' \
+      '  *) export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH" ;;' \
+      'esac' \
+      > /etc/profile.d/proto.sh; \
     curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh; \
     curl --proto '=https' --tlsv1.2 -LsSf "https://github.com/max-sixty/worktrunk/releases/download/v${WORKTRUNK_VERSION}/worktrunk-installer.sh" \
       | env WORKTRUNK_INSTALL_DIR=/usr/local WORKTRUNK_NO_MODIFY_PATH=1 sh; \
@@ -88,11 +130,14 @@ RUN set -eux; \
     fi; \
     groupadd --gid "${LETTA_GID}" letta; \
     useradd --uid "${LETTA_UID}" --gid "${LETTA_GID}" --create-home --home-dir /home/letta --shell /bin/bash letta; \
+    if getent group docker >/dev/null 2>&1; then \
+      usermod -aG docker letta; \
+    fi; \
     version="${LETTA_CODE_VERSION:-$(cat /tmp/letta-code-version.txt)}"; \
     bun install -g "@letta-ai/letta-code@${version}"; \
     mkdir -p /home/letta/Code /home/letta/.config /home/letta/.letta; \
-    chown -R letta:letta /home/letta "${COREPACK_HOME}"; \
-    chmod -R u+rwX,go+rX "${COREPACK_HOME}"; \
+    chown -R letta:letta /home/letta "${COREPACK_HOME}" "${PROTO_HOME}"; \
+    chmod -R u+rwX,go+rX "${COREPACK_HOME}" "${PROTO_HOME}"; \
     rm -rf /var/lib/apt/lists/*
 
 ENV ENV_NAME="cloud"
