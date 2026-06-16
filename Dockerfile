@@ -69,6 +69,10 @@ RUN set -eux; \
     curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh; \
     curl --proto '=https' --tlsv1.2 -LsSf "https://github.com/max-sixty/worktrunk/releases/download/v${WORKTRUNK_VERSION}/worktrunk-installer.sh" \
       | env WORKTRUNK_INSTALL_DIR=/usr/local WORKTRUNK_NO_MODIFY_PATH=1 sh; \
+    # Install proto at /opt/proto so toolchain storage survives /home volume mounts on Railway.
+    mkdir -p /opt/proto; \
+    curl -LsSf https://moonrepo.dev/install/proto.sh | env PROTO_INSTALL_DIR=/opt/proto PROTO_HOME=/opt/proto sh; \
+    ln -sf /opt/proto/bin/proto /usr/local/bin/proto; \
     ln -sf /usr/bin/fdfind /usr/local/bin/fd; \
     ln -sf /usr/bin/batcat /usr/local/bin/bat; \
     mkdir -p /etc/xdg/worktrunk; \
@@ -91,8 +95,8 @@ RUN set -eux; \
     version="${LETTA_CODE_VERSION:-$(cat /tmp/letta-code-version.txt)}"; \
     bun install -g "@letta-ai/letta-code@${version}"; \
     mkdir -p /home/letta/Code /home/letta/.config /home/letta/.letta; \
-    chown -R letta:letta /home/letta "${COREPACK_HOME}"; \
-    chmod -R u+rwX,go+rX "${COREPACK_HOME}"; \
+    chown -R letta:letta /home/letta "${COREPACK_HOME}" /opt/proto; \
+    chmod -R u+rwX,go+rX "${COREPACK_HOME}" /opt/proto; \
     rm -rf /var/lib/apt/lists/*
 
 ENV ENV_NAME="cloud"
@@ -101,6 +105,7 @@ ENV LETTA_UID="${LETTA_UID}"
 ENV LETTA_GID="${LETTA_GID}"
 ENV HOME="/home/letta"
 ENV XDG_CONFIG_HOME="/home/letta/.config"
+ENV PROTO_HOME="/opt/proto"
 
 COPY entrypoint.sh /usr/local/bin/letta-server-entrypoint
 RUN chmod +x /usr/local/bin/letta-server-entrypoint
