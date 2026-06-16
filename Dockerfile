@@ -71,7 +71,7 @@ RUN set -eux; \
       | env WORKTRUNK_INSTALL_DIR=/usr/local WORKTRUNK_NO_MODIFY_PATH=1 sh; \
     # Install proto at /opt/proto so toolchain storage survives /home volume mounts on Railway.
     mkdir -p /opt/proto; \
-    curl -LsSf https://moonrepo.dev/install/proto.sh | env PROTO_HOME=/opt/proto sh; \
+    curl -LsSf https://moonrepo.dev/install/proto.sh | env PROTO_HOME=/opt/proto bash; \
     ln -sf /opt/proto/bin/proto /usr/local/bin/proto; \
     ln -sf /usr/bin/fdfind /usr/local/bin/fd; \
     ln -sf /usr/bin/batcat /usr/local/bin/bat; \
