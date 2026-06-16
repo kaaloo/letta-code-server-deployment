@@ -94,7 +94,7 @@ RUN set -eux; \
     useradd --uid "${LETTA_UID}" --gid "${LETTA_GID}" --create-home --home-dir /home/letta --shell /bin/bash letta; \
     version="${LETTA_CODE_VERSION:-$(cat /tmp/letta-code-version.txt)}"; \
     bun install -g "@letta-ai/letta-code@${version}"; \
-    mkdir -p /home/letta/Code /home/letta/.config /home/letta/.letta; \
+    mkdir -p /home/letta/Code /home/letta/.config /home/letta/.letta/hooks; \
     chown -R letta:letta /home/letta "${COREPACK_HOME}" /opt/proto; \
     chmod -R u+rwX,go+rX "${COREPACK_HOME}" /opt/proto; \
     rm -rf /var/lib/apt/lists/*
@@ -112,6 +112,12 @@ ENV PATH="/opt/proto/shims:${PATH}"
 
 COPY entrypoint.sh /usr/local/bin/letta-server-entrypoint
 RUN chmod +x /usr/local/bin/letta-server-entrypoint
+
+# PostToolUse hook that pushes memfs commits to origin/main after memory edits.
+# The entrypoint merges the hook config into settings.json at startup.
+COPY hooks/memfs-autopush.py /home/letta/.letta/hooks/memfs-autopush.py
+RUN chmod +x /home/letta/.letta/hooks/memfs-autopush.py && \
+    chown letta:letta /home/letta/.letta/hooks/memfs-autopush.py
 
 WORKDIR /home/letta/Code
 
