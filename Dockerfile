@@ -71,7 +71,7 @@ RUN set -eux; \
       | env WORKTRUNK_INSTALL_DIR=/usr/local WORKTRUNK_NO_MODIFY_PATH=1 sh; \
     # Install proto at /opt/proto so toolchain storage survives /home volume mounts on Railway.
     mkdir -p /opt/proto; \
-    curl -LsSf https://moonrepo.dev/install/proto.sh | env PROTO_INSTALL_DIR=/opt/proto PROTO_HOME=/opt/proto sh; \
+    curl -LsSf https://moonrepo.dev/install/proto.sh | env PROTO_HOME=/opt/proto sh; \
     ln -sf /opt/proto/bin/proto /usr/local/bin/proto; \
     ln -sf /usr/bin/fdfind /usr/local/bin/fd; \
     ln -sf /usr/bin/batcat /usr/local/bin/bat; \
@@ -106,6 +106,9 @@ ENV LETTA_GID="${LETTA_GID}"
 ENV HOME="/home/letta"
 ENV XDG_CONFIG_HOME="/home/letta/.config"
 ENV PROTO_HOME="/opt/proto"
+# Add proto's shim directory to PATH so proto-managed toolchains (node, pnpm, etc.)
+# resolve through /opt/proto/shims instead of the system-installed versions.
+ENV PATH="/opt/proto/shims:${PATH}"
 
 COPY entrypoint.sh /usr/local/bin/letta-server-entrypoint
 RUN chmod +x /usr/local/bin/letta-server-entrypoint
