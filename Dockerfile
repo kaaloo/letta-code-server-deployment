@@ -6,7 +6,6 @@ ENV COREPACK_HOME=/opt/corepack
 ENV PROTO_HOME=/opt/proto
 ENV PROTO_LOG=error
 ENV PATH=/opt/proto/shims:/opt/proto/bin:$PATH
-ARG TARGETARCH
 ARG LETTA_UID=10001
 ARG LETTA_GID=10001
 ARG LETTA_CODE_VERSION=""
@@ -45,10 +44,8 @@ RUN set -eux; \
       bash \
       bat \
       build-essential \
-      containerd.io \
       direnv \
       docker-buildx-plugin \
-      docker-ce \
       docker-ce-cli \
       docker-compose-plugin \
       fd-find \
@@ -83,7 +80,7 @@ RUN set -eux; \
         echo "Skipping unavailable Debian package: $pkg"; \
       fi; \
     done; \
-    supabase_arch="${TARGETARCH:-amd64}"; \
+    supabase_arch="$(dpkg --print-architecture)"; \
     case "$supabase_arch" in \
       amd64|arm64) ;; \
       *) echo "Unsupported Supabase CLI architecture: $supabase_arch" >&2; exit 1 ;; \
@@ -131,9 +128,10 @@ RUN set -eux; \
     fi; \
     groupadd --gid "${LETTA_GID}" letta; \
     useradd --uid "${LETTA_UID}" --gid "${LETTA_GID}" --create-home --home-dir /home/letta --shell /bin/bash letta; \
-    if getent group docker >/dev/null 2>&1; then \
-      usermod -aG docker letta; \
+    if ! getent group docker >/dev/null 2>&1; then \
+      groupadd --system docker; \
     fi; \
+    usermod -aG docker letta; \
     version="${LETTA_CODE_VERSION:-$(cat /tmp/letta-code-version.txt)}"; \
     bun install -g "@letta-ai/letta-code@${version}"; \
     mkdir -p /home/letta/Code /home/letta/.config /home/letta/.letta/hooks; \

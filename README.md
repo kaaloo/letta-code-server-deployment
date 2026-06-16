@@ -14,7 +14,7 @@ The Docker image includes baseline tools for TypeScript, Python, GitHub, and dat
 - [proto](https://moonrepo.dev/docs/proto/install) under `/opt/proto` for repository-pinned toolchains via `.prototools`
 - Git, GitHub CLI (`gh`), Worktrunk (`wt`), ripgrep, fd, bat, jq, yq, shellcheck, pre-commit, uv, and common build tools
 - Supabase CLI installed from the official Linux release package
-- Docker Engine, Docker CLI, Buildx, and Compose plugin from Docker's official Debian repository
+- Docker CLI, Buildx, and Compose plugin from Docker's official Debian repository
 
 Supabase local development uses Docker containers. The image includes Docker tooling for runtimes that expose a usable Docker daemon or Docker socket, but Railway does not currently provide the container privileges required to run a nested Docker daemon. On Railway, `supabase start` and other local Supabase container workflows are expected **not** to work. Agents can still edit code, run non-Docker checks, build TypeScript projects, and use remote Supabase projects from Railway.
 
