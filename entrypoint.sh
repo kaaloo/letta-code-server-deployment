@@ -5,7 +5,7 @@ LETTA_USER="${LETTA_USER:-letta}"
 LETTA_GROUP="${LETTA_GROUP:-letta}"
 LETTA_UID="${LETTA_UID:-10001}"
 LETTA_GID="${LETTA_GID:-10001}"
-LETTA_HOME="${LETTA_HOME:-/home/letta}"
+LETTA_HOME="${LETTA_HOME:-/Users/luis}"
 
 export HOME="$LETTA_HOME"
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$LETTA_HOME/.config}"
@@ -16,7 +16,7 @@ if [ "${1:-}" = "letta-server" ]; then
 fi
 
 # Inject memfs-autopush PostToolUse hook into settings.json if absent.
-# Railway mounts /home as a persistent volume, so settings.json survives
+# Railway mounts /Users as a persistent volume, so settings.json survives
 # deploys — we only need to merge when the hook is missing.
 _inject_memfs_hook() {
   _settings="$LETTA_HOME/.letta/settings.json"

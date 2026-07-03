@@ -14,4 +14,4 @@ primary_region = "sjc"
 
 [mounts]
   source = "letta_data"
-  destination = "/home"
+  destination = "/Users"

@@ -127,15 +127,15 @@ RUN set -eux; \
       groupdel "$existing_group"; \
     fi; \
     groupadd --gid "${LETTA_GID}" letta; \
-    useradd --uid "${LETTA_UID}" --gid "${LETTA_GID}" --create-home --home-dir /home/letta --shell /bin/bash letta; \
+    useradd --uid "${LETTA_UID}" --gid "${LETTA_GID}" --create-home --home-dir /Users/luis --shell /bin/bash letta; \
     if ! getent group docker >/dev/null 2>&1; then \
       groupadd --system docker; \
     fi; \
     usermod -aG docker letta; \
     version="${LETTA_CODE_VERSION:-$(cat /tmp/letta-code-version.txt)}"; \
     bun install -g "@letta-ai/letta-code@${version}"; \
-    mkdir -p /home/letta/Code /home/letta/.config /home/letta/.letta/hooks; \
-    chown -R letta:letta /home/letta "${COREPACK_HOME}" "${PROTO_HOME}"; \
+    mkdir -p /Users/luis/Code /Users/luis/.config /Users/luis/.letta/hooks; \
+    chown -R letta:letta /Users/luis "${COREPACK_HOME}" "${PROTO_HOME}"; \
     chmod -R u+rwX,go+rX "${COREPACK_HOME}" "${PROTO_HOME}"; \
     rm -rf /var/lib/apt/lists/*
 
@@ -143,8 +143,8 @@ ENV ENV_NAME="cloud"
 ENV LETTA_RESTORE_ENABLED_CHANNELS="1"
 ENV LETTA_UID="${LETTA_UID}"
 ENV LETTA_GID="${LETTA_GID}"
-ENV HOME="/home/letta"
-ENV XDG_CONFIG_HOME="/home/letta/.config"
+ENV HOME="/Users/luis"
+ENV XDG_CONFIG_HOME="/Users/luis/.config"
 ENV PROTO_HOME="/opt/proto"
 # Add proto's shim directory to PATH so proto-managed toolchains (node, pnpm, etc.)
 # resolve through /opt/proto/shims instead of the system-installed versions.
@@ -155,11 +155,11 @@ RUN chmod +x /usr/local/bin/letta-server-entrypoint
 
 # PostToolUse hook that pushes memfs commits to origin/main after memory edits.
 # The entrypoint merges the hook config into settings.json at startup.
-COPY hooks/memfs-autopush.py /home/letta/.letta/hooks/memfs-autopush.py
-RUN chmod +x /home/letta/.letta/hooks/memfs-autopush.py && \
-    chown letta:letta /home/letta/.letta/hooks/memfs-autopush.py
+COPY hooks/memfs-autopush.py /Users/luis/.letta/hooks/memfs-autopush.py
+RUN chmod +x /Users/luis/.letta/hooks/memfs-autopush.py && \
+    chown letta:letta /Users/luis/.letta/hooks/memfs-autopush.py
 
-WORKDIR /home/letta/Code
+WORKDIR /Users/luis/Code
 
 ENTRYPOINT ["/usr/local/bin/letta-server-entrypoint"]
 CMD ["letta-server"]
