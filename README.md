@@ -102,7 +102,7 @@ For deployments that should automatically pick up new Letta Code releases and ke
 - Volume size: `20 GB` recommended for agent workspaces
 - Automatic deploys: enabled
 
-This repo commits a `letta-code-version.txt` bump whenever a new `@letta-ai/letta-code` npm release ships. Railway then sees a normal Git commit and redeploys services connected to `main`.
+The `update-letta-code-version.yml` workflow can bump `letta-code-version.txt` when a new `@letta-ai/letta-code` npm release ships. The hourly schedule is currently disabled (Railway worker decommissioned 2026-08-20); trigger it manually via `workflow_dispatch` from the Actions tab, or re-enable the `schedule` block in the workflow file if automatic bumps are needed again.
 
 The container starts as root only long enough to prepare the mounted volume, then drops privileges and runs `letta server` as the `letta` user with `HOME=/home/letta`. Store repositories under `/home/letta/Code`.
 
@@ -127,13 +127,17 @@ railway logs
 
 ## Updating
 
-This repo tracks the Letta Code npm release in `letta-code-version.txt`. A scheduled GitHub Actions workflow checks `@letta-ai/letta-code` and commits a version bump to `main` when a new release ships.
+This repo tracks the Letta Code npm release in `letta-code-version.txt`. The GitHub Actions workflow in `.github/workflows/update-letta-code-version.yml` checks `@letta-ai/letta-code` and commits a version bump to `main` when a new release ships.
 
-That gives Railway a real Git commit to deploy. Any Railway service connected to this repo with automatic deploys enabled will rebuild and install the new Letta Code version without manual redeploys.
+**The hourly schedule is currently disabled** (Railway worker decommissioned 2026-08-20). To update the version:
 
-Other platforms still update on rebuild:
+1. Trigger the workflow manually from the **Actions** tab (`workflow_dispatch`), or
+2. Edit `letta-code-version.txt` directly and commit to `main`.
 
-- **Railway template snapshots**: reconnect the service to `letta-ai/letta-code-server-deployment` on branch `main`, then enable automatic deploys.
+If you bring back a Railway service (or another auto-deploying platform), re-enable the `schedule` block in the workflow file to restore automatic version bumps.
+
+Other platforms update on rebuild:
+
 - **Fly**: `fly deploy`.
 - **Docker Compose**: `docker compose build --pull && docker compose up -d`.
 
