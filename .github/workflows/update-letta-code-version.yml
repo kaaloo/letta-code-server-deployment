@@ -2,10 +2,11 @@ name: Update Letta Code version
 
 on:
   workflow_dispatch:
-  schedule:
-    # Turn npm releases into Git commits so Railway services connected to this
-    # repo can auto-deploy from the main branch.
-    - cron: "17 * * * *"
+  # schedule disabled 2026-08-20: Railway worker decommissioned, no longer
+  # needs auto-deploy triggers. Re-enable the schedule trigger if the
+  # Railway service (or another auto-deploying platform) is brought back.
+  # schedule:
+  #   - cron: "17 * * * *"
 
 permissions:
   contents: write
